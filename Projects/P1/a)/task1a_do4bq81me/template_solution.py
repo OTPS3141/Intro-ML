@@ -4,6 +4,13 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import Ridge
+
+### Read data
+
+# df_sample = pd.read_csv('/home/otps3141/Documents/Dokumente/ETH QE/Semester 2/Intro ML/Projects/P1/a)/task1a_do4bq81me/sample.csv')
+# df_train = pd.read_csv('/home/otps3141/Documents/Dokumente/ETH QE/Semester 2/Intro ML/Projects/P1/a)/task1a_do4bq81me/train.csv')
 
 
 def fit(X, y, lam):
@@ -22,10 +29,25 @@ def fit(X, y, lam):
     ----------
     w: array of floats: dim = (13,), optimal parameters of ridge regression
     """
-    w = np.zeros((13,))
-    # TODO: Enter your code here
-    assert w.shape == (13,)
-    return w
+    # w = np.zeros((13,))
+
+    ### Closed form
+    w_star = np.linalg.inv(X.T@X - lam * np.identity(13))@(X.T@y)
+
+
+    ### Sklearn
+
+    # Define Ridge Regression model
+    reg = Ridge(lam)
+    reg.fit(X, y)
+    
+    w = reg.coef_
+
+
+    assert w_star.shape == (13,)
+    return w_star
+
+
 
 
 def calculate_RMSE(w, X, y):
@@ -42,8 +64,8 @@ def calculate_RMSE(w, X, y):
     ----------
     RMSE: float: dim = 1, RMSE value
     """
-    RMSE = 0
-    # TODO: Enter your code here
+    RMSE = mean_squared_error(X.dot(w) - y)**(0.5)
+    
     assert np.isscalar(RMSE)
     return RMSE
 
@@ -77,16 +99,22 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
 # Main function. You don't have to change this
 if __name__ == "__main__":
     # Data loading
-    data = pd.read_csv("train.csv")
+    data = pd.read_csv("/home/otps3141/Documents/Dokumente/ETH QE/Semester 2/Intro ML/Projects/P1/a)/task1a_do4bq81me/train.csv")
     y = data["y"].to_numpy()
     data = data.drop(columns="y")
     # print a few data samples
-    print(data.head())
+    # print(data.head())
+    # print(y)
 
     X = data.to_numpy()
+    # print(X)
     # The function calculating the average RMSE
     lambdas = [0.1, 1, 10, 100, 200]
     n_folds = 10
     avg_RMSE = average_LR_RMSE(X, y, lambdas, n_folds)
+
+
+    print(fit(X, y, 0))
+
     # Save results in the required format
-    np.savetxt("./results.csv", avg_RMSE, fmt="%.12f")
+    # np.savetxt("./results.csv", avg_RMSE, fmt="%.12f")
