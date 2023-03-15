@@ -32,7 +32,7 @@ def fit(X, y, lam):
     # w = np.zeros((13,))
 
     ### Closed form
-    w_star = np.linalg.inv(X.T@X - lam * np.identity(13))@(X.T@y)
+    w_star = np.linalg.inv(X.T@X + lam * np.identity(13))@(X.T@y)
 
 
     ### Sklearn
@@ -64,7 +64,11 @@ def calculate_RMSE(w, X, y):
     ----------
     RMSE: float: dim = 1, RMSE value
     """
-    RMSE = mean_squared_error(X.dot(w) - y)**(0.5)
+    # Calculate predicted y value
+    y_pred = X.dot(w)
+    
+    # Determine mean squared error
+    RMSE = mean_squared_error(y, y_pred)**0.5
     
     assert np.isscalar(RMSE)
     return RMSE
@@ -87,6 +91,46 @@ def average_LR_RMSE(X, y, lambdas, n_folds):
     avg_RMSE: array of floats: dim = (5,), average RMSE value for every lambda
     """
     RMSE_mat = np.zeros((n_folds, len(lambdas)))
+
+    # Define cross validation model
+    kf = KFold(n_folds)
+    
+    # Fill in all entries in the matrix 'RMSE_mat'
+    mat_i = 0
+    mat_j = 0
+    
+    for lam in lambdas:
+        for train_index, test_index in kf.split(X):
+            X_train = X[train_index]
+            y_train = y[train_index]
+            
+            w = fit(X_train, y_train, lam)
+            
+            X_test = X[test_index]
+            y_test = y[test_index]
+            
+            RMSE_mat[mat_i,mat_j] = calculate_RMSE(w, X_test, y_test)
+            
+            mat_i = mat_i + 1
+        
+        mat_i = 0
+        mat_j = mat_j + 1
+
+    # mod = KFold(n_folds)
+
+    # for i, lam in lambdas:
+
+    #     for index, train, test in enumerate(mod.split(X)):
+
+    #         w = fit(X[train], y[train], lam)
+
+    #         RMSE = calculate_RMSE(w, X[train], y[train])
+            
+    #         RMSE_mat[index, i] = RMSE
+
+    
+
+
 
     # TODO: Enter your code here. Hint: Use functions 'fit' and 'calculate_RMSE' with training and test data
     # and fill all entries in the matrix 'RMSE_mat'
@@ -113,8 +157,8 @@ if __name__ == "__main__":
     n_folds = 10
     avg_RMSE = average_LR_RMSE(X, y, lambdas, n_folds)
 
-
-    print(fit(X, y, 0))
+    print(average_LR_RMSE(X, y, lambdas, 10))
+    # print(fit(X, y, 0))
 
     # Save results in the required format
-    # np.savetxt("./results.csv", avg_RMSE, fmt="%.12f")
+    np.savetxt("Projects/Own solutions/P1/sample.csv", avg_RMSE, fmt="%.12f")
